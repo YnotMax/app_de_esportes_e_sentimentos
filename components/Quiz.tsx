@@ -177,7 +177,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6 animate-fade-in">
+      <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center px-6 animate-fade-in">
         <div className="animate-spin mb-6">
           <BrainIcon className="w-16 h-16 text-teal-400" />
         </div>
@@ -189,10 +189,11 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
 
   if (result) {
     return (
-      <div className="p-6 pb-24 animate-fade-in">
-        <div className="bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700 relative overflow-hidden">
+      // Container agora flui com o conteúdo e tem padding ajustado
+      <div className="p-4 sm:p-6 animate-fade-in">
+        <div className="bg-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-700 relative overflow-hidden">
           {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
           
           <div className="flex items-center justify-between mb-6 relative z-10">
             <span className="text-xs uppercase tracking-widest text-teal-400 font-bold">Diagnóstico Completo</span>
@@ -206,7 +207,8 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
           </div>
           
           <div className="mb-8 relative z-10">
-             <h2 className="text-4xl font-bold text-white mb-2 tracking-tight">{result.name}</h2>
+             {/* Texto ligeiramente menor no título para evitar quebra excessiva em telas pequenas */}
+             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 tracking-tight leading-tight">{result.name}</h2>
              <div className="inline-block bg-purple-500/20 text-purple-200 px-3 py-1 rounded-full text-xs font-semibold mb-4 border border-purple-500/30">
                 {result.neurochemistry}
              </div>
@@ -243,7 +245,7 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
   const question = QUESTIONS[currentStep];
 
   return (
-    <div className="p-6 pb-24 max-w-lg mx-auto">
+    <div className="p-6 max-w-lg mx-auto">
       {/* Header with Progress and Back Button */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-6">

@@ -57,6 +57,17 @@ export default function App() {
     setCurrentTab('explore');
   };
 
+  // FIX: Função inteligente para gerenciar a seleção de esportes
+  const handleSportSelect = (sport: string) => {
+    // Se o usuário escolheu um esporte diferente do que estava salvo na jornada atual
+    if (currentJourney && currentJourney.sport !== sport) {
+        // Limpamos a jornada antiga para que o Pathfinder gere uma nova
+        setCurrentJourney(null);
+        localStorage.removeItem('neuroflow_journey');
+    }
+    setSelectedSport(sport);
+  };
+
   const handleSaveJourney = (journey: Journey) => {
     setCurrentJourney(journey);
     localStorage.setItem('neuroflow_journey', JSON.stringify(journey));
@@ -68,7 +79,7 @@ export default function App() {
         return (
           <Quiz 
             onComplete={handleArchetypeComplete} 
-            setSport={setSelectedSport}
+            setSport={handleSportSelect} // Usamos a nova função aqui
             goToJourney={() => setCurrentTab('journey')}
             existingArchetype={userArchetype}
             onReset={handleResetApp}
@@ -77,6 +88,7 @@ export default function App() {
       case 'journey':
         return (
           <Pathfinder 
+            key={selectedSport} // FIX: Força o componente a reiniciar se o esporte mudar
             sport={selectedSport} 
             existingJourney={currentJourney}
             saveJourney={handleSaveJourney}
@@ -95,11 +107,13 @@ export default function App() {
   }
 
   return (
-    <div className="bg-slate-900 min-h-screen text-slate-50 font-sans">
-      <main className="max-w-md mx-auto min-h-screen bg-slate-900 shadow-2xl overflow-hidden relative pb-16">
+    // FIX CRÍTICO: h-[100dvh] força o app a ter exatamente o tamanho da tela do celular.
+    // overflow-hidden previne que a "casca" do site role.
+    <div className="bg-slate-900 h-[100dvh] w-full flex justify-center overflow-hidden text-slate-50 font-sans">
+      <main className="w-full max-w-md h-full bg-slate-900 shadow-2xl relative flex flex-col">
         
-        {/* Global Header */}
-        <header className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4 bg-gradient-to-b from-slate-900/90 to-transparent pointer-events-none">
+        {/* Global Header - Absolute para ficar sobre o conteúdo sem empurrar layout */}
+        <header className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4 bg-gradient-to-b from-slate-900/95 to-slate-900/0 pointer-events-none">
              {/* Logo text or simple title */}
              <div className="font-bold text-lg text-slate-200 opacity-80 pointer-events-auto">
                  ViV <span className="text-[10px] text-slate-500 font-normal ml-1">NeuroFlow</span>
@@ -114,11 +128,18 @@ export default function App() {
              </button>
         </header>
 
-        {/* Padding top handled inside components or via spacer if needed, but components mostly scroll internally or have top padding */}
-        <div className="pt-14 h-full overflow-y-auto scrollbar-hide">
+        {/* 
+            Área de Conteúdo Rolável 
+            flex-1: Ocupa todo o espaço restante entre o topo e o navbar.
+            overflow-y-auto: Permite rolar apenas este conteúdo.
+            pt-16: Espaço para o Header.
+            pb-24: Espaço extra para o Navbar não cobrir o último item.
+        */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide pt-16 pb-24 w-full">
             {renderContent()}
         </div>
 
+        {/* Navbar fixada visualmente na base */}
         <Navbar currentTab={currentTab} onTabChange={setCurrentTab} />
       </main>
 
