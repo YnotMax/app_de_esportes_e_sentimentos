@@ -4,7 +4,9 @@ import { Archetype, JourneyStep, QuizAnswer } from "../types";
 // Helper function to get the AI client with the correct key (Custom or Default)
 const getAIClient = () => {
   const customKey = localStorage.getItem('neuroflow_custom_api_key');
-  const apiKey = customKey && customKey.trim().length > 0 ? customKey : process.env.API_KEY;
+  // USANDO CHAVE HARDCODED CONFORME SOLICITADO.
+  // AVISO: Isso expõe a chave publicamente no código cliente.
+  const apiKey = customKey && customKey.trim().length > 0 ? customKey : 'AIzaSyAZT-IYAbyMazlKHfIJBhRSn4rz_8jniNY';
   return new GoogleGenAI({ apiKey });
 };
 
