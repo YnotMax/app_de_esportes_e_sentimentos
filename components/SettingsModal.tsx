@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { XIcon, RefreshIcon, InfoIcon, SettingsIcon } from './Icons';
+import { APP_LOGO_URL } from '../constants';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 {/* Logo Image */}
                 <div className="mb-6 text-center">
                      <img 
-                        src="https://placehold.co/400x400/FCEE67/000000?text=ViV+Logo" 
+                        src={APP_LOGO_URL}
                         alt="ViV Instituto São José" 
                         className="w-24 h-24 mx-auto rounded-2xl shadow-lg shadow-yellow-500/10 object-cover" 
                     />

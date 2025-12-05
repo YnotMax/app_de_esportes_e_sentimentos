@@ -1,4 +1,5 @@
 import React from 'react';
+import { APP_LOGO_URL } from '../constants';
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -13,20 +14,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStart }) => {
         Iniciativa Independente
       </div>
 
-      {/* 
-         INSTRUÇÃO PARA A IMAGEM:
-         1. Salve a imagem no seu GitHub.
-         2. Clique na imagem no GitHub e clique em "Raw" ou "Original".
-         3. Copie o link (deve terminar em .png ou .jpg).
-         4. Cole o link dentro das aspas do src="" abaixo.
-      */}
       <div className="mb-10 relative">
         <img 
-            src="https://placehold.co/400x400/FCEE67/000000?text=ViV+Logo" 
+            src={APP_LOGO_URL}
             alt="ViV Instituto São José" 
             className="w-48 h-48 mx-auto rounded-3xl shadow-2xl shadow-yellow-500/20 object-cover" 
         />
-        {/* Remover este comentário após colocar o link real acima */}
       </div>
 
       <div className="flex-1 flex flex-col justify-center max-w-xs mx-auto space-y-6">
