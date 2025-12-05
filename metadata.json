@@ -1,0 +1,7 @@
+{
+  "name": "App de exercícios",
+  "description": "A neuroscience-backed habit formation app. Features a neuro-compatibility quiz to find your ideal sport, a reverse-engineering pathfinder to break down goals, and an action center to schedule and track micro-habits.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
