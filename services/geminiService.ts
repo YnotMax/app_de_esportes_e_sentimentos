@@ -1,7 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Archetype, JourneyStep, QuizAnswer } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper function to get the AI client with the correct key (Custom or Default)
+const getAIClient = () => {
+  const customKey = localStorage.getItem('neuroflow_custom_api_key');
+  const apiKey = customKey && customKey.trim().length > 0 ? customKey : process.env.API_KEY;
+  return new GoogleGenAI({ apiKey });
+};
 
 // Model constants
 const FLASH_MODEL = 'gemini-2.5-flash';
@@ -10,6 +15,7 @@ const FLASH_MODEL = 'gemini-2.5-flash';
  * Analyzes quiz answers to determine the user's Neuro-Archetype.
  */
 export const analyzeNeuroArchetype = async (answers: QuizAnswer[]): Promise<Archetype> => {
+  const ai = getAIClient();
   const prompt = `
     Analise as seguintes respostas detalhadas de um usuário para uma avaliação de "Neuro-Compatibilidade" de exercícios.
     Os dados incluem bateria social, ambiente preferido, estilo de foco, necessidades de liberação de agressividade, preferência por estrutura, fonte de motivação, tolerância à dor e hábitos com equipamentos.
@@ -51,6 +57,7 @@ export const analyzeNeuroArchetype = async (answers: QuizAnswer[]): Promise<Arch
  * Generates the "Pathfinder" journey steps for a specific sport.
  */
 export const generateJourneySteps = async (sport: string): Promise<JourneyStep[]> => {
+  const ai = getAIClient();
   const prompt = `
     Crie um plano de formação de hábito com "Engenharia Reversa" para um iniciante querendo começar: ${sport}.
     Quebre em exatamente 4 passos logísticos, evitando o treino real até o final.
@@ -106,6 +113,7 @@ export const getChatAssistance = async (
   currentStepContext: string,
   userLocation?: GeolocationCoordinates
 ) => {
+  const ai = getAIClient();
   
   let toolConfig = undefined;
   

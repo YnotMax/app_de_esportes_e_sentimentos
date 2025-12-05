@@ -11,18 +11,18 @@
         font-family: 'Inter', sans-serif;
         background-color: #0f172a; /* Slate 900 - Fallback */
         color: #f8fafc; /* Slate 50 */
+        overflow: hidden; /* Prevent body scroll, handle in app container */
       }
-      /* Custom scrollbar for clean UI */
-      ::-webkit-scrollbar {
-        width: 6px;
+      
+      /* Utility to hide scrollbar but keep functionality */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
       }
-      ::-webkit-scrollbar-track {
-        background: #1e293b; 
+      .scrollbar-hide {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
       }
-      ::-webkit-scrollbar-thumb {
-        background: #475569; 
-        border-radius: 3px;
-      }
+
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }

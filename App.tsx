@@ -115,7 +115,7 @@ export default function App() {
         </header>
 
         {/* Padding top handled inside components or via spacer if needed, but components mostly scroll internally or have top padding */}
-        <div className="pt-14 h-full overflow-y-auto custom-scrollbar">
+        <div className="pt-14 h-full overflow-y-auto scrollbar-hide">
             {renderContent()}
         </div>
 
