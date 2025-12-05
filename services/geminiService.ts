@@ -13,6 +13,14 @@ const getAIClient = () => {
 // Model constants
 const FLASH_MODEL = 'gemini-2.5-flash';
 
+// Configurações de segurança para evitar bloqueios "criativos" indevidos
+const SAFETY_SETTINGS = [
+  { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+];
+
 /**
  * Analyzes quiz answers to determine the user's Neuro-Archetype.
  */
@@ -31,28 +39,34 @@ export const analyzeNeuroArchetype = async (answers: QuizAnswer[]): Promise<Arch
     ${answers.map(a => `- Contexto: ${a.category}, Escolha: ${a.selectedOption}`).join('\n')}
   `;
 
-  const response = await ai.models.generateContent({
-    model: FLASH_MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING },
-          description: { type: Type.STRING },
-          neurochemistry: { type: Type.STRING },
-          suggestedSports: { 
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          }
-        },
-        required: ["name", "description", "neurochemistry", "suggestedSports"]
-      }
-    }
-  });
+  try {
+      const response = await ai.models.generateContent({
+        model: FLASH_MODEL,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              description: { type: Type.STRING },
+              neurochemistry: { type: Type.STRING },
+              suggestedSports: { 
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              }
+            },
+            required: ["name", "description", "neurochemistry", "suggestedSports"]
+          },
+          safetySettings: SAFETY_SETTINGS
+        }
+      });
 
-  return JSON.parse(response.text || "{}") as Archetype;
+      return JSON.parse(response.text || "{}") as Archetype;
+  } catch (error) {
+      console.error("Gemini Error:", error);
+      throw error;
+  }
 };
 
 /**
@@ -74,35 +88,41 @@ export const generateJourneySteps = async (sport: string): Promise<JourneyStep[]
     Retorne um array JSON de passos com titulo e descrição em PT-BR.
   `;
 
-  const response = await ai.models.generateContent({
-    model: FLASH_MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            id: { type: Type.INTEGER },
-            title: { type: Type.STRING },
-            description: { type: Type.STRING },
-            type: { type: Type.STRING, enum: ["equipment", "location", "trigger", "micro-goal"] }
+  try {
+      const response = await ai.models.generateContent({
+        model: FLASH_MODEL,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                id: { type: Type.INTEGER },
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                type: { type: Type.STRING, enum: ["equipment", "location", "trigger", "micro-goal"] }
+              },
+              required: ["id", "title", "description", "type"]
+            }
           },
-          required: ["id", "title", "description", "type"]
+          safetySettings: SAFETY_SETTINGS
         }
-      }
-    }
-  });
+      });
 
-  const rawSteps = JSON.parse(response.text || "[]");
-  
-  // Hydrate with initial status
-  return rawSteps.map((s: any, index: number) => ({
-    ...s,
-    id: index + 1,
-    status: index === 0 ? 'current' : 'locked' // First step is current, others locked
-  }));
+      const rawSteps = JSON.parse(response.text || "[]");
+      
+      // Hydrate with initial status
+      return rawSteps.map((s: any, index: number) => ({
+        ...s,
+        id: index + 1,
+        status: index === 0 ? 'current' : 'locked' // First step is current, others locked
+      }));
+  } catch (error) {
+      console.error("Gemini Error:", error);
+      throw error;
+  }
 };
 
 /**
@@ -141,32 +161,38 @@ export const getChatAssistance = async (
     Se perguntarem sobre equipamentos, dê opções econômicas e "pro".
   `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash', // Use flash for speed, maps tool is available on flash
-    contents: message,
-    config: {
-        systemInstruction: systemInstruction,
-        tools: [{ googleMaps: {} }],
-        toolConfig: toolConfig
-    }
-  });
-
-  // Extract text and potential map links
-  let text = response.text || "";
-  const mapChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  
-  // Append map links to text if they exist (simple formatting)
-  if (mapChunks.length > 0) {
-      text += "\n\n**Sugestões de Locais:**\n";
-      mapChunks.forEach((chunk: any) => {
-          // Check for maps first (Google Maps Tool), then fallback to web
-          if (chunk.maps?.uri) {
-             text += `- [${chunk.maps.title}](${chunk.maps.uri})\n`;
-          } else if (chunk.web?.uri) {
-             text += `- [${chunk.web.title}](${chunk.web.uri})\n`;
-          }
+  try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash', // Use flash for speed, maps tool is available on flash
+        contents: message,
+        config: {
+            systemInstruction: systemInstruction,
+            tools: [{ googleMaps: {} }],
+            toolConfig: toolConfig,
+            safetySettings: SAFETY_SETTINGS
+        }
       });
-  }
 
-  return text;
+      // Extract text and potential map links
+      let text = response.text || "";
+      const mapChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      
+      // Append map links to text if they exist (simple formatting)
+      if (mapChunks.length > 0) {
+          text += "\n\n**Sugestões de Locais:**\n";
+          mapChunks.forEach((chunk: any) => {
+              // Check for maps first (Google Maps Tool), then fallback to web
+              if (chunk.maps?.uri) {
+                 text += `- [${chunk.maps.title}](${chunk.maps.uri})\n`;
+              } else if (chunk.web?.uri) {
+                 text += `- [${chunk.web.title}](${chunk.web.uri})\n`;
+              }
+          });
+      }
+
+      return text;
+  } catch (error) {
+      console.error("Gemini Chat Error:", error);
+      return "Desculpe, estou com dificuldades de conexão no momento. Tente novamente em alguns instantes.";
+  }
 };

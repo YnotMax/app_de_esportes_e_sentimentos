@@ -146,9 +146,12 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
         const archetype = await analyzeNeuroArchetype(newAnswers);
         setResult(archetype);
         onComplete(archetype);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error analyzing quiz:", error);
-        alert("Ops! A IA teve um bloqueio criativo. Tente novamente.");
+        // Improved error message
+        const errorMsg = error.message || JSON.stringify(error);
+        alert(`Ops! Ocorreu um erro na IA.\n\nDetalhe técnico: ${errorMsg}\n\nDica: Verifique se a chave API tem permissão para este domínio.`);
+        
         // Rollback simple error handling
         setCurrentStep(prev => prev - 1);
         setAnswers(prev => prev.slice(0, -1));
