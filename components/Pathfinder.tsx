@@ -37,9 +37,10 @@ export const Pathfinder: React.FC<PathfinderProps> = ({ sport, existingJourney, 
           const newJourney = { sport, steps };
           setJourney(newJourney);
           saveJourney(newJourney);
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Erro ao criar jornada. Tente novamente.");
+            const errorMsg = e.message || JSON.stringify(e);
+            alert(`Erro ao criar jornada.\n\nVerifique se sua chave de API está configurada corretamente nas Configurações (ícone de engrenagem).\n\nErro: ${errorMsg}`);
         } finally {
           setLoading(false);
         }
@@ -97,7 +98,7 @@ export const Pathfinder: React.FC<PathfinderProps> = ({ sport, existingJourney, 
         );
         setChatHistory(prev => [...prev, { role: 'model', text: responseText }]);
     } catch (e) {
-        setChatHistory(prev => [...prev, { role: 'model', text: "Desculpe, tive um problema de conexão. Tente novamente." }]);
+        setChatHistory(prev => [...prev, { role: 'model', text: "Desculpe, tive um problema de conexão. Verifique sua Chave API nas configurações." }]);
     } finally {
         setChatLoading(false);
     }

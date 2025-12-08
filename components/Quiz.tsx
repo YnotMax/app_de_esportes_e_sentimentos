@@ -148,9 +148,16 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
         onComplete(archetype);
       } catch (error: any) {
         console.error("Error analyzing quiz:", error);
-        // Improved error message
+        
         const errorMsg = error.message || JSON.stringify(error);
-        alert(`Ops! Ocorreu um erro na IA.\n\nDetalhe técnico: ${errorMsg}\n\nDica: Verifique se a chave API tem permissão para este domínio.`);
+        
+        // Mensagem amigável baseada no erro
+        let friendlyMsg = "Ocorreu um erro na conexão com a IA.";
+        if (errorMsg.includes("403") || errorMsg.includes("leaked") || errorMsg.includes("permission") || errorMsg.includes("API key")) {
+            friendlyMsg = "A chave de API não foi configurada ou expirou.";
+        }
+        
+        alert(`Ops! ${friendlyMsg}\n\nSOLUÇÃO: Toque no ícone de engrenagem (Configurações) no canto superior direito e insira sua API Key válida.\n\nDetalhe técnico: ${errorMsg}`);
         
         // Rollback simple error handling
         setCurrentStep(prev => prev - 1);

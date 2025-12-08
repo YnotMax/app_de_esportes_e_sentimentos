@@ -4,10 +4,20 @@ import { Archetype, JourneyStep, QuizAnswer } from "../types";
 // Helper function to get the AI client with the correct key (Custom or Default)
 const getAIClient = () => {
   const customKey = localStorage.getItem('neuroflow_custom_api_key');
-  // USANDO CHAVE HARDCODED CONFORME SOLICITADO.
-  // AVISO: Isso expõe a chave publicamente no código cliente.
-  const apiKey = customKey && customKey.trim().length > 0 ? customKey : 'AIzaSyAZT-IYAbyMazlKHfIJBhRSn4rz_8jniNY';
-  return new GoogleGenAI({ apiKey });
+  
+  // AVISO DE SEGURANÇA: Nunca deixe chaves hardcoded em produção.
+  // O app agora prioriza a chave inserida pelo usuário nas configurações (localStorage)
+  // ou a variável de ambiente do servidor (process.env.API_KEY).
+  const apiKey = (customKey && customKey.trim().length > 0) 
+    ? customKey 
+    : process.env.API_KEY;
+
+  if (!apiKey) {
+    console.warn("Nenhuma API Key encontrada. Configure API_KEY no Vercel ou use o menu de Configurações do app.");
+  }
+
+  // Passamos a chave (ou string vazia para evitar crash na inicialização, o erro virá na chamada)
+  return new GoogleGenAI({ apiKey: apiKey || '' });
 };
 
 // Model constants
@@ -33,7 +43,9 @@ export const analyzeNeuroArchetype = async (answers: QuizAnswer[]): Promise<Arch
     Com base neste perfil abrangente, RETORNE EM PORTUGUÊS DO BRASIL:
     1. Atribua um "Nome de Arquétipo" criativo e impactante (ex: O Estrategista Zen, O Gladiador Social, O Solista da Natureza).
     2. Explique a neurociência/psicologia por trás disso (Por que essa pessoa falha em academias comuns? Quais neuroquímicos específicos como Dopamina/Serotonina/Endorfina ela busca baseada nas respostas?).
-    3. Sugira 3 esportes/atividades específicos que sejam um par perfeito. Evite sugestões genéricas; seja específico (ex: em vez de "corrida", sugira "Trail Running" ou "Sprints" baseado nas respostas).
+    3. Sugira EXATAMENTE 5 esportes/atividades específicos seguindo esta regra estrita:
+       - Os 3 primeiros devem ser o "Match Perfeito" para a neuroquímica (pode ser algo de nicho como Escalada, Kitesurf, CrossFit).
+       - Os 2 últimos DEVEM ser "Opções Populares e Acessíveis" (ex: Musculação, Corrida de Rua, Natação, Funcional, Futebol) mas explicados sob a ótica do arquétipo.
     
     Respostas do Usuário:
     ${answers.map(a => `- Contexto: ${a.category}, Escolha: ${a.selectedOption}`).join('\n')}
@@ -193,6 +205,6 @@ export const getChatAssistance = async (
       return text;
   } catch (error) {
       console.error("Gemini Chat Error:", error);
-      return "Desculpe, estou com dificuldades de conexão no momento. Tente novamente em alguns instantes.";
+      return "Desculpe, estou com dificuldades de conexão no momento. Verifique sua chave API.";
   }
 };
