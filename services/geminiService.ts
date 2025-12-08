@@ -5,19 +5,22 @@ import { Archetype, JourneyStep, QuizAnswer } from "../types";
 const getAIClient = () => {
   const customKey = localStorage.getItem('neuroflow_custom_api_key');
   
-  // Fixed: Removed import.meta.env to resolve TypeScript error. 
-  // API key must be obtained from process.env.API_KEY or the custom key storage.
-  const envKey = process.env.API_KEY;
+  // CORREÇÃO CRÍTICA PARA VERCEL/VITE:
+  // 1. O Vercel só envia para o navegador variáveis que começam com VITE_.
+  // 2. O Vite usa 'import.meta.env' para ler essas variáveis, não 'process.env'.
+  // 3. Usamos '(import.meta as any)' para evitar erros de TypeScript caso as definições de tipo faltem.
+  const viteKey = (import.meta as any).env?.VITE_API_KEY;
+  const processKey = process.env.API_KEY; // Fallback
 
   const apiKey = (customKey && customKey.trim().length > 0) 
     ? customKey 
-    : envKey;
+    : (viteKey || processKey);
 
   if (!apiKey) {
-    console.warn("Nenhuma API Key encontrada. Configure API_KEY nas variáveis de ambiente ou use o menu de Configurações do app.");
+    console.warn("Nenhuma API Key encontrada. Verifique VITE_API_KEY no Vercel.");
   }
 
-  // Passamos a chave (ou string vazia para evitar crash na inicialização, o erro virá na chamada)
+  // Passamos a chave (ou string vazia para evitar crash na inicialização, o erro virá na chamada se vazio)
   return new GoogleGenAI({ apiKey: apiKey || '' });
 };
 
