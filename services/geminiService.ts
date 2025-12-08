@@ -5,15 +5,16 @@ import { Archetype, JourneyStep, QuizAnswer } from "../types";
 const getAIClient = () => {
   const customKey = localStorage.getItem('neuroflow_custom_api_key');
   
-  // AVISO DE SEGURANÇA: Nunca deixe chaves hardcoded em produção.
-  // O app agora prioriza a chave inserida pelo usuário nas configurações (localStorage)
-  // ou a variável de ambiente do servidor (process.env.API_KEY).
+  // Fixed: Removed import.meta.env to resolve TypeScript error. 
+  // API key must be obtained from process.env.API_KEY or the custom key storage.
+  const envKey = process.env.API_KEY;
+
   const apiKey = (customKey && customKey.trim().length > 0) 
     ? customKey 
-    : process.env.API_KEY;
+    : envKey;
 
   if (!apiKey) {
-    console.warn("Nenhuma API Key encontrada. Configure API_KEY no Vercel ou use o menu de Configurações do app.");
+    console.warn("Nenhuma API Key encontrada. Configure API_KEY nas variáveis de ambiente ou use o menu de Configurações do app.");
   }
 
   // Passamos a chave (ou string vazia para evitar crash na inicialização, o erro virá na chamada)
