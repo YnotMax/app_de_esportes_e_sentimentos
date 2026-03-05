@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Journey, JourneyStep } from '../types';
-import { generateJourneySteps, getChatAssistance } from '../services/geminiService';
-import { MapIcon, CheckCircleIcon, SkipForwardIcon, ChatBubbleIcon, RefreshIcon } from './Icons';
+import { generateJourneySteps } from '../services/geminiService';
+import { MapIcon, CheckCircleIcon, SkipForwardIcon } from './Icons';
+import { JourneySkeleton } from './JourneySkeleton';
 
 interface PathfinderProps {
   sport: string;
@@ -21,13 +22,6 @@ export const Pathfinder: React.FC<PathfinderProps> = ({ sport, existingJourney, 
   const [loading, setLoading] = useState(false);
   const [journey, setJourney] = useState<Journey | null>(existingJourney);
   
-  // Chat State
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
-  const [chatHistory, setChatHistory] = useState<{role: 'user'|'model', text: string}[]>([]);
-  const [chatLoading, setChatLoading] = useState(false);
-  const activeStepRef = useRef<JourneyStep | null>(null);
-
   useEffect(() => {
     const initJourney = async () => {
       if (!existingJourney && sport) {
@@ -66,70 +60,36 @@ export const Pathfinder: React.FC<PathfinderProps> = ({ sport, existingJourney, 
     saveJourney(newJourney);
   };
 
-  const handleChat = async () => {
-    if(!chatMessage.trim()) return;
-
-    const userMsg = chatMessage;
-    setChatMessage('');
-    setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
-    setChatLoading(true);
-
-    let location: GeolocationCoordinates | undefined;
-    
-    // Only request location if user explicitly asks for 'where' or 'location' context
-    // or if the current step is 'location'
-    if (activeStepRef.current?.type === 'location' || userMsg.toLowerCase().includes('onde') || userMsg.toLowerCase().includes('local')) {
-        try {
-            const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject);
-            });
-            location = pos.coords;
-        } catch (e) {
-            console.warn("Location permission denied or error");
-        }
-    }
-
-    try {
-        const responseText = await getChatAssistance(
-            userMsg, 
-            sport, 
-            activeStepRef.current?.description || "Contexto Geral",
-            location
-        );
-        setChatHistory(prev => [...prev, { role: 'model', text: responseText }]);
-    } catch (e) {
-        setChatHistory(prev => [...prev, { role: 'model', text: "Desculpe, tive um problema de conexão. Verifique sua Chave API nas configurações." }]);
-    } finally {
-        setChatLoading(false);
-    }
-  };
-
   const isJourneyComplete = journey?.steps.every(s => s.status === 'completed' || s.status === 'skipped');
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[60vh]">
-        <div className="animate-spin mb-4 text-purple-400">
-          <MapIcon className="w-12 h-12" />
-        </div>
-        <p className="text-slate-300">Engenharia reversa do hábito...</p>
-      </div>
-    );
+    return <JourneySkeleton />;
   }
 
   if (!journey) return <div className="p-6 text-center text-slate-400">Selecione um esporte na aba Explorar.</div>;
 
   return (
-    <div className="relative min-h-screen pb-24 bg-slate-900">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-md p-6 border-b border-slate-800">
-        <h2 className="text-2xl font-bold text-white">Desbravador: {journey.sport}</h2>
-        <p className="text-slate-400 text-sm">Passo a passo logístico para começar.</p>
+    <div className="relative min-h-screen bg-slate-900 pb-32">
+      {/* Header Compacto e Fixo */}
+      <div className="sticky top-0 z-40 bg-slate-900 border-b border-slate-800 shadow-xl">
+        <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex-1 min-w-0 pr-4">
+                <h2 className="text-lg font-bold text-white truncate leading-tight">
+                    {journey.sport.split(':')[0]}
+                </h2>
+                <p className="text-slate-400 text-xs truncate">
+                    Jornada de 4 passos
+                </p>
+            </div>
+            <div className="flex-shrink-0 bg-slate-800 p-2 rounded-lg border border-slate-700">
+                <MapIcon className="w-5 h-5 text-purple-500" />
+            </div>
+        </div>
       </div>
 
-      <div className="p-6 space-y-8 relative">
-        {/* Vertical Line */}
-        <div className="absolute left-9 top-10 bottom-10 w-0.5 bg-slate-800 -z-0" />
+      <div className="p-4 sm:p-6 space-y-8 relative">
+        {/* Vertical Line - Fixed z-index to be behind cards */}
+        <div className="absolute left-[1.85rem] sm:left-[2.35rem] top-6 bottom-10 w-0.5 bg-slate-800 z-0" aria-hidden="true" />
 
         {journey.steps.map((step, index) => {
           const isLocked = step.status === 'locked';
@@ -137,46 +97,54 @@ export const Pathfinder: React.FC<PathfinderProps> = ({ sport, existingJourney, 
           const isCurrent = step.status === 'current';
 
           return (
-            <div key={step.id} className={`relative pl-12 transition-opacity ${isLocked ? 'opacity-40 grayscale' : 'opacity-100'}`}>
-              {/* Dot Indicator */}
-              <div className={`absolute left-0 top-6 w-6 h-6 rounded-full border-4 transition-colors z-10
-                ${isDone ? 'bg-green-500 border-green-500' : isCurrent ? 'bg-purple-500 border-purple-500 animate-pulse' : 'bg-slate-900 border-slate-600'}
-              `}>
-                {isDone && <CheckCircleIcon className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />}
+            <div 
+                key={step.id} 
+                className={`relative pl-12 sm:pl-14 transition-all duration-300 ${isLocked ? 'opacity-50 grayscale' : 'opacity-100'}`}
+                role="listitem"
+                aria-current={isCurrent ? 'step' : undefined}
+            >
+              {/* Dot Indicator - Fixed z-index to be above line but below modal */}
+              <div className={`absolute left-0 top-6 w-8 h-8 rounded-full border-4 transition-colors z-10 flex items-center justify-center shadow-md
+                ${isDone ? 'bg-green-500 border-green-600' : isCurrent ? 'bg-purple-500 border-purple-600 animate-pulse' : 'bg-slate-800 border-slate-700'}
+              `} aria-hidden="true">
+                {isDone && <CheckCircleIcon className="w-4 h-4 text-white" />}
+                {!isDone && !isCurrent && <div className="w-2 h-2 bg-slate-600 rounded-full" />}
               </div>
 
-              {/* Card */}
-              <div className={`bg-slate-800 rounded-xl p-5 border ${isCurrent ? 'border-purple-500/50 shadow-purple-500/20 shadow-lg' : 'border-slate-700'}`}>
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs uppercase font-bold text-slate-500 tracking-wider">
+              {/* Card - Ensure z-index is above line */}
+              <div className={`
+                  relative z-10 rounded-2xl p-5 border transition-all duration-300
+                  ${isCurrent 
+                    ? 'bg-slate-800 border-purple-500/50 shadow-lg shadow-purple-500/10 ring-1 ring-purple-500/20' 
+                    : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
+                  }
+              `}>
+                <div className="flex justify-between items-start mb-3 gap-4">
+                    <span className={`
+                        text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md
+                        ${isCurrent ? 'bg-purple-500/20 text-purple-300' : 'bg-slate-700 text-slate-400'}
+                    `}>
                         {STEP_TYPE_TRANSLATIONS[step.type] || step.type}
                     </span>
-                    <button 
-                        onClick={() => {
-                            setChatOpen(true);
-                            activeStepRef.current = step;
-                            setChatHistory([]); // Reset chat for new context or keep history? Resetting for simplicity per step context
-                        }}
-                        className="text-purple-400 hover:text-purple-300"
-                    >
-                        <ChatBubbleIcon className="w-5 h-5" />
-                    </button>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-1">{step.title}</h3>
-                <p className="text-slate-400 text-sm mb-4 leading-relaxed">{step.description}</p>
+                
+                <h3 className="text-lg font-bold text-white mb-2 leading-tight break-words">{step.title}</h3>
+                <p className="text-slate-400 text-sm mb-6 leading-relaxed break-words">{step.description}</p>
 
                 {!isLocked && !isDone && (
-                  <div className="flex space-x-3">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => updateStepStatus(step.id, 'completed')}
-                      className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg text-sm font-medium flex items-center justify-center transition-colors"
+                      aria-label={`Marcar ${step.title} como feito`}
+                      className="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center transition-all active:scale-95 shadow-lg shadow-green-900/20 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-800"
                     >
                       <CheckCircleIcon className="w-4 h-4 mr-2" />
                       Feito
                     </button>
                     <button
                       onClick={() => updateStepStatus(step.id, 'skipped')}
-                      className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 rounded-lg text-sm font-medium flex items-center justify-center transition-colors"
+                      aria-label={`Pular ${step.title}`}
+                      className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800"
                     >
                       <SkipForwardIcon className="w-4 h-4 mr-2" />
                       Pular
@@ -184,83 +152,38 @@ export const Pathfinder: React.FC<PathfinderProps> = ({ sport, existingJourney, 
                   </div>
                 )}
                  {isDone && (
-                     <div className="flex items-center text-green-400 text-sm font-medium mt-2">
-                         <CheckCircleIcon className="w-4 h-4 mr-2" /> {step.status === 'skipped' ? 'Pulado' : 'Completado'}
-                         <button onClick={() => updateStepStatus(step.id, 'current')} className="ml-auto text-slate-500 text-xs underline">Editar</button>
+                     <div className="flex items-center justify-between text-sm font-medium mt-2 pt-2 border-t border-slate-700/50">
+                         <span className={`flex items-center ${step.status === 'skipped' ? 'text-slate-400' : 'text-green-400'}`}>
+                            {step.status === 'skipped' ? <SkipForwardIcon className="w-4 h-4 mr-2" /> : <CheckCircleIcon className="w-4 h-4 mr-2" />}
+                            {step.status === 'skipped' ? 'Pulado' : 'Completado'}
+                         </span>
+                         <button 
+                            onClick={() => updateStepStatus(step.id, 'current')} 
+                            className="text-slate-500 hover:text-slate-300 text-xs underline focus:outline-none focus:text-white"
+                         >
+                            Editar
+                         </button>
                      </div>
                  )}
               </div>
             </div>
           );
         })}
+        
+        {/* Spacer for bottom action button visibility */}
+        <div className="h-24" aria-hidden="true"></div>
       </div>
 
-        {/* Start Action Button */}
-        {isJourneyComplete && (
-            <div className="fixed bottom-20 left-0 right-0 p-6 bg-gradient-to-t from-slate-900 to-transparent">
-                <button
-                    onClick={goToAction}
-                    className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-rose-500/30 transform hover:scale-[1.02] transition-all"
-                >
-                    Ir para Ação &rarr;
-                </button>
-            </div>
-        )}
-
-      {/* Chat Modal */}
-      {chatOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-slate-800 w-full max-w-md h-[70vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl border border-slate-700">
-            <div className="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
-              <h3 className="text-white font-bold flex items-center">
-                  <ChatBubbleIcon className="w-5 h-5 mr-2 text-purple-400" />
-                  Assistente IA
-              </h3>
-              <button onClick={() => setChatOpen(false)} className="text-slate-400 hover:text-white">✕</button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {chatHistory.length === 0 && (
-                    <div className="text-center text-slate-500 mt-10">
-                        <p>Dúvidas sobre {STEP_TYPE_TRANSLATIONS[activeStepRef.current?.type || ''] || activeStepRef.current?.type}?</p>
-                        <p className="text-xs mt-2">Ex: "Onde encontrar {activeStepRef.current?.type === 'equipment' ? 'equipamentos' : 'locais'} baratos?"</p>
-                    </div>
-                )}
-                {chatHistory.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] p-3 rounded-lg text-sm ${
-                            msg.role === 'user' ? 'bg-purple-600 text-white rounded-br-none' : 'bg-slate-700 text-slate-200 rounded-bl-none prose prose-invert prose-p:my-1 prose-a:text-teal-400'
-                        }`}>
-                             {/* Very basic markdown rendering for links */}
-                             {msg.role === 'model' ? (
-                                <div dangerouslySetInnerHTML={{ 
-                                    __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                                    .replace(/\n/g, '<br/>')
-                                                    .replace(/- \[(.*?)\]\((.*?)\)/g, '• <a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-                                }} />
-                             ) : msg.text}
-                        </div>
-                    </div>
-                ))}
-                {chatLoading && <div className="text-slate-500 text-xs animate-pulse">Digitando...</div>}
-            </div>
-
-            <div className="p-4 bg-slate-900 border-t border-slate-700">
-                <div className="flex space-x-2">
-                    <input 
-                        type="text" 
-                        value={chatMessage}
-                        onChange={(e) => setChatMessage(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleChat()}
-                        placeholder="Pergunte algo..."
-                        className="flex-1 bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-purple-500"
-                    />
-                    <button onClick={handleChat} disabled={chatLoading} className="bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-500 disabled:opacity-50">
-                        ➤
-                    </button>
-                </div>
-            </div>
-          </div>
+      {/* Start Action Button - Fixed at bottom */}
+      {isJourneyComplete && (
+        <div className="fixed bottom-16 left-0 right-0 p-6 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20 pb-safe-area animate-slide-up">
+            <button
+                onClick={goToAction}
+                className="w-full max-w-md mx-auto bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-rose-500/20 transform active:scale-95 transition-all flex items-center justify-center group focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+            >
+                <span>Ir para Ação</span>
+                <span className="ml-2 group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </button>
         </div>
       )}
     </div>

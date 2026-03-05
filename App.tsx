@@ -7,8 +7,18 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { SettingsModal } from './components/SettingsModal';
 import { SettingsIcon } from './components/Icons';
 import { Tab, Archetype, Journey } from './types';
+import { APP_LOGO_URL } from './constants';
+import { ToastProvider } from './components/Toast';
 
 export default function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
+  );
+}
+
+function AppContent() {
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   
@@ -107,22 +117,24 @@ export default function App() {
   }
 
   return (
-    // FIX CRÍTICO: h-[100dvh] força o app a ter exatamente o tamanho da tela do celular.
-    // overflow-hidden previne que a "casca" do site role.
-    <div className="bg-slate-900 h-[100dvh] w-full flex justify-center overflow-hidden text-slate-50 font-sans">
-      <main className="w-full max-w-md h-full bg-slate-900 shadow-2xl relative flex flex-col">
+    // FIX CRÍTICO: min-h-[100dvh] permite rolagem se necessário (zoom), mas tenta ocupar tela cheia.
+    // overflow-hidden no container principal previne scroll duplo indesejado, mas permite scroll interno.
+    <div className="bg-slate-900 min-h-[100dvh] w-full flex justify-center text-slate-50 font-sans">
+      <main className="w-full max-w-md h-[100dvh] bg-slate-900 shadow-2xl relative flex flex-col overflow-hidden">
         
         {/* Global Header - Absolute para ficar sobre o conteúdo sem empurrar layout */}
-        <header className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4 bg-gradient-to-b from-slate-900/95 to-slate-900/0 pointer-events-none">
+        <header className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4 pt-safe-area bg-gradient-to-b from-slate-900/95 to-slate-900/0 pointer-events-none">
              {/* Logo text or simple title */}
-             <div className="font-bold text-lg text-slate-200 opacity-80 pointer-events-auto">
-                 ViV <span className="text-[10px] text-slate-500 font-normal ml-1">NeuroFlow</span>
+             <div className="flex items-center gap-2 font-bold text-lg text-slate-200 opacity-90 pointer-events-auto" role="heading" aria-level={1}>
+                 <img src={APP_LOGO_URL} alt="Logo ViV" className="w-8 h-8 rounded-lg object-contain bg-slate-800 p-1" />
+                 <span>ViV <span className="text-[10px] text-slate-400 font-normal ml-1 uppercase tracking-wider">NeuroFlow</span></span>
              </div>
              
              {/* Settings Trigger */}
              <button 
                 onClick={() => setShowSettings(true)}
-                className="p-2 bg-slate-800/80 backdrop-blur rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors pointer-events-auto shadow-lg"
+                aria-label="Abrir Configurações"
+                className="p-2 bg-slate-800/90 backdrop-blur rounded-full hover:bg-slate-700 text-slate-300 hover:text-white transition-colors pointer-events-auto shadow-lg border border-slate-700/50"
              >
                  <SettingsIcon className="w-5 h-5" />
              </button>
@@ -132,10 +144,10 @@ export default function App() {
             Área de Conteúdo Rolável 
             flex-1: Ocupa todo o espaço restante entre o topo e o navbar.
             overflow-y-auto: Permite rolar apenas este conteúdo.
-            pt-16: Espaço para o Header.
-            pb-24: Espaço extra para o Navbar não cobrir o último item.
+            pt-20: Espaço para o Header + Safe Area.
+            pb-32: Espaço extra para o Navbar não cobrir o último item (aumentado para segurança).
         */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide pt-16 pb-24 w-full">
+        <div className="flex-1 overflow-y-auto scrollbar-hide pt-20 pb-32 w-full px-safe-area">
             {renderContent()}
         </div>
 

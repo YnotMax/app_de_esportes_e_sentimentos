@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { QuizAnswer, Archetype } from '../types';
 import { analyzeNeuroArchetype } from '../services/geminiService';
 import { BrainIcon, RefreshIcon, ChevronLeftIcon } from './Icons';
+import { QuizResult } from './QuizResult';
 
 interface QuizProps {
   onComplete: (archetype: Archetype) => void;
@@ -196,83 +197,45 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
 
   if (result) {
     return (
-      // Container agora flui com o conteúdo e tem padding ajustado
-      <div className="p-4 sm:p-6 animate-fade-in">
-        <div className="bg-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-700 relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          
-          <div className="flex items-center justify-between mb-6 relative z-10">
-            <span className="text-xs uppercase tracking-widest text-teal-400 font-bold">Diagnóstico Completo</span>
-            <button 
-                onClick={handleRetake} 
-                className="flex items-center space-x-2 text-slate-500 hover:text-white transition-colors text-xs font-medium"
-            >
-                <RefreshIcon className="w-4 h-4" />
-                <span>Refazer</span>
-            </button>
-          </div>
-          
-          <div className="mb-8 relative z-10">
-             {/* Texto ligeiramente menor no título para evitar quebra excessiva em telas pequenas */}
-             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 tracking-tight leading-tight">{result.name}</h2>
-             <div className="inline-block bg-purple-500/20 text-purple-200 px-3 py-1 rounded-full text-xs font-semibold mb-4 border border-purple-500/30">
-                {result.neurochemistry}
-             </div>
-             <p className="text-slate-300 leading-relaxed text-sm border-l-2 border-teal-500 pl-4">
-                {result.description}
-             </p>
-          </div>
-
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Esportes Compatíveis</h3>
-          <div className="space-y-3 relative z-10">
-            {result.suggestedSports.map((sport, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setSport(sport);
-                  goToJourney();
-                }}
-                className="w-full text-left p-4 rounded-xl bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 hover:border-teal-500/50 transition-all group"
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-white text-lg">{sport}</span>
-                  <span className="text-teal-400 text-sm opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                    Criar Plano &rarr;
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <QuizResult 
+        result={result} 
+        onRetake={handleRetake} 
+        onSelectSport={(sport) => {
+            setSport(sport);
+            goToJourney();
+        }} 
+      />
     );
   }
 
   const question = QUESTIONS[currentStep];
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
+    <div className="p-4 sm:p-6 max-w-lg mx-auto pb-32">
       {/* Header with Progress and Back Button */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex justify-between items-center mb-6">
             <div className="flex items-center">
                 {currentStep > 0 ? (
-                    <button onClick={handleBack} className="mr-3 p-1 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+                    <button 
+                        onClick={handleBack} 
+                        aria-label="Voltar para a pergunta anterior"
+                        className="mr-3 p-2 -ml-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                    >
                         <ChevronLeftIcon className="w-6 h-6" />
                     </button>
                 ) : (
                     <div className="w-8 mr-3"></div> // Spacer to keep title aligned
                 )}
-                <span className="text-xs font-bold text-slate-500 tracking-widest uppercase">
+                <span className="text-xs font-bold text-slate-400 tracking-widest uppercase" aria-live="polite">
                     Passo {currentStep + 1} de {QUESTIONS.length}
                 </span>
             </div>
-            <BrainIcon className="w-5 h-5 text-teal-500 opacity-50" />
+            <BrainIcon className="w-5 h-5 text-teal-500 opacity-50" aria-hidden="true" />
         </div>
         
         {/* Animated Progress Bar */}
-        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin={1} aria-valuemax={QUESTIONS.length}>
             <div 
                 className="h-full bg-gradient-to-r from-teal-600 to-teal-400 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${((currentStep + 1) / QUESTIONS.length) * 100}%` }}
@@ -282,14 +245,14 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
 
       {/* Question Container - Key forces re-render animation on step change */}
       <div key={currentStep} className="animate-fade-in">
-        <h2 className="text-2xl font-bold text-white mb-2 leading-tight">
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 leading-tight">
             {question.scenario}
         </h2>
-        <p className="text-slate-400 text-sm mb-8 italic opacity-80">
+        <p className="text-slate-400 text-sm mb-6 sm:mb-8 italic opacity-90">
             Seja honesto, ninguém está vendo.
         </p>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4" role="radiogroup" aria-label={question.scenario}>
             {question.options.map((option, idx) => {
                 const isSelected = selectedOptionIdx === idx;
                 return (
@@ -297,7 +260,9 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
                         key={idx}
                         onClick={() => handleOptionClick(option, idx)}
                         disabled={selectedOptionIdx !== null} // Prevent double clicking during transition
-                        className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 shadow-md group relative overflow-hidden
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={`w-full text-left p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 shadow-md group relative overflow-hidden focus:outline-none focus:ring-2 focus:ring-teal-500
                             ${isSelected 
                                 ? 'bg-teal-500/10 border-teal-500 transform scale-[1.02]' 
                                 : 'bg-slate-800 border-transparent hover:border-slate-600 hover:bg-slate-750'
@@ -306,15 +271,15 @@ export const Quiz: React.FC<QuizProps> = ({ onComplete, setSport, goToJourney, e
                     >
                         <div className="flex items-center relative z-10">
                             <div className={`
-                                w-8 h-8 rounded-full flex items-center justify-center mr-4 font-bold text-sm transition-colors
+                                w-8 h-8 rounded-full flex items-center justify-center mr-4 font-bold text-sm transition-colors flex-shrink-0
                                 ${isSelected 
                                     ? 'bg-teal-500 text-white' 
                                     : 'bg-slate-700 text-slate-400 group-hover:bg-slate-600 group-hover:text-white'
                                 }
-                            `}>
+                            `} aria-hidden="true">
                                 {String.fromCharCode(65 + idx)}
                             </div>
-                            <span className={`font-medium transition-colors ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                            <span className={`font-medium text-sm sm:text-base transition-colors ${isSelected ? 'text-white' : 'text-slate-200'}`}>
                                 {option.text}
                             </span>
                         </div>

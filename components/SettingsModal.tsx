@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { XIcon, RefreshIcon, InfoIcon, SettingsIcon } from './Icons';
 import { APP_LOGO_URL } from '../constants';
+import { useToast } from './Toast';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onResetApp }) => {
   const [customKey, setCustomKey] = useState('');
   const [savedKey, setSavedKey] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const key = localStorage.getItem('neuroflow_custom_api_key');
@@ -25,7 +27,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     if (customKey.trim()) {
       localStorage.setItem('neuroflow_custom_api_key', customKey.trim());
       setSavedKey(true);
-      alert('Chave API salva com sucesso!');
+      showToast('Chave API salva com sucesso!', 'success');
     } else {
       handleRemoveKey();
     }
@@ -35,6 +37,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     localStorage.removeItem('neuroflow_custom_api_key');
     setCustomKey('');
     setSavedKey(false);
+    showToast('Chave API removida.', 'info');
+  };
+
+  const handleReset = () => {
+    if (window.confirm("Tem certeza? Isso apagará todo o seu progresso e histórico.")) {
+      onResetApp();
+      onClose();
+      showToast('App resetado com sucesso.', 'info');
+    }
   };
 
   if (!isOpen) return null;
@@ -127,12 +138,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     <p className="text-slate-500 text-xs mb-4">Quer mudar suas respostas e descobrir um novo esporte?</p>
                     
                     <button
-                        onClick={() => {
-                            if(window.confirm("Tem certeza? Isso apagará seu progresso atual.")) {
-                                onResetApp();
-                                onClose();
-                            }
-                        }}
+                        onClick={handleReset}
                         className="flex items-center justify-center w-full bg-slate-800 hover:bg-slate-700 text-rose-400 font-medium py-3 rounded-lg transition-colors border border-slate-700"
                     >
                         <RefreshIcon className="w-4 h-4 mr-2" />
@@ -141,7 +147,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 </div>
 
                 <div className="mt-8 text-xs text-slate-600 text-center">
-                    Versão 1.1.0 • Feito com carinho ❤️
+                    Versão 2.0.0 • Feito com carinho ❤️
                 </div>
              </div>
         </div>

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>ViV - Instituto São José</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
         font-family: 'Inter', sans-serif;
         background-color: #0f172a; /* Slate 900 - Fallback */
         color: #f8fafc; /* Slate 50 */
-        overflow: hidden; /* Prevent body scroll, handle in app container */
+        /* overflow: hidden; Removed to allow better accessibility handling */
       }
       
       /* Utility to hide scrollbar but keep functionality */
@@ -45,6 +45,7 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
