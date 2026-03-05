@@ -126,10 +126,10 @@ function AppContent() {
         <header className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4 pt-safe-area bg-gradient-to-b from-slate-900/95 to-slate-900/0 pointer-events-none">
              {/* Logo text or simple title */}
              <div 
-                onClick={() => setCurrentTab('explore')}
+                onClick={() => setShowWelcome(true)}
                 className="flex items-center gap-2 font-bold text-lg text-slate-200 opacity-90 pointer-events-auto cursor-pointer hover:opacity-100 transition-opacity" 
                 role="button" 
-                aria-label="Ir para o Início"
+                aria-label="Ir para a Tela Inicial (Capa)"
              >
                  <img src={APP_LOGO_URL} alt="Logo ViV" className="w-8 h-8 rounded-lg object-contain bg-slate-800 p-1" />
                  <span>ViV <span className="text-[10px] text-slate-400 font-normal ml-1 uppercase tracking-wider">NeuroFlow</span></span>
@@ -138,8 +138,8 @@ function AppContent() {
              {/* Actions */}
              <div className="flex items-center gap-3 pointer-events-auto">
                 <button 
-                    onClick={() => setCurrentTab('explore')}
-                    aria-label="Ir para o Início"
+                    onClick={() => setShowWelcome(true)}
+                    aria-label="Ir para a Tela Inicial (Capa)"
                     className="p-2 bg-slate-800/90 backdrop-blur rounded-full hover:bg-slate-700 text-slate-300 hover:text-white transition-colors shadow-lg border border-slate-700/50"
                 >
                     <HomeIcon className="w-5 h-5" />
