@@ -1,3 +1,3 @@
 
-// Caminho para a imagem na raiz do projeto
-export const APP_LOGO_URL = "/images.png";
+// Caminho para a imagem na pasta public (servida na raiz)
+export const APP_LOGO_URL = "/logo.png";
