@@ -25,7 +25,7 @@ const getAIClient = () => {
 };
 
 // Model constants
-const FLASH_MODEL = 'gemini-3-flash-preview';
+const FLASH_MODEL = 'gemini-3.1-flash-lite-preview';
 
 // Configurações de segurança para evitar bloqueios "criativos" indevidos
 const SAFETY_SETTINGS = [
