@@ -23,6 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 
-# Assets
-public/logo.png
-
